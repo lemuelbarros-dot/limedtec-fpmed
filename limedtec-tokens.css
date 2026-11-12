@@ -1,0 +1,385 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   LIMEDTEC — TOKENS DO TEMA.  Peca de MOLDE: a FPMED herda este arquivo.
+   Escrito em 12/08/2026, item 7 (reforma visual), fase 1.
+
+   >>> ELE E INERTE DE PROPOSITO. Nao ha um unico seletor de elemento nu — so `:root` e classes
+       `.lt-*`. Dá pra incluir este arquivo em QUALQUER tela hoje e NENHUM pixel muda. Cada tela
+       adota no dia da fatia dela, e o "sem apagao" fica garantido pelo proprio CSS, nao pela
+       minha memoria de nao ter esquecido nada.
+
+   >>> DE ONDE SAEM OS NUMEROS. Nada aqui e gosto:
+       . as cores passaram pela formula de contraste da WCAG (tools/mede_contraste.js);
+       . a grade de 8 e a escala tipografica vieram das referencias pesquisadas (ver abaixo);
+       . os valores de marca vem do cliente.config.js — este arquivo nao conhece cliente nenhum.
+
+   >>> A MEDICAO QUE MUDOU O DESENHO (12/08). Rodei o contraste dos pares que as telas usam HOJE:
+       SEIS DE DOZE REPROVAM EM AA, e o pior e o principal:
+           verde da marca #00c27a x texto branco ....... 2,33:1   (exige 4,5)
+           azul de acao   #29b8ff x texto branco ....... 2,24:1
+           verde sucesso  #22c55e x texto branco ....... 2,28:1
+           vermelho       #ef4444 x texto branco ....... 3,76:1
+           amarelo        #ffb020 x texto branco ....... 1,83:1
+       Ou seja: o botao principal do sistema tem rotulo dificil de ler pra quem enxerga menos, e
+       esta assim desde sempre — porque cor a gente olha e acha bonita, nao mede. (licao S12)
+       >>> A REGRA QUE ISSO IMPOE AQUI: **a cor da marca continua sendo a da marca**, mas ela muda
+           de PAPEL. O verde vivo e otimo sobre fundo escuro (7,96:1 no navy) e pessimo como fundo
+           de botao branco. Entao: verde vivo = ACENTO e texto sobre escuro; verde escuro
+           (#007a4d, 5,40:1) = FUNDO de botao com texto branco. Nao se trocou a marca; corrigiu-se
+           onde cada tom pode aparecer.
+
+   >>> AS TRES REFERENCIAS DA REGRA ZERO, e a decisao concreta tirada de cada uma:
+       1. STRIPE (dashboard financeiro) — "tabela densa dentro de moldura generosa". A DECISAO:
+          a linha de tabela fica em 32-36px (densa, pra caber muita cotacao na tela) MAS o respiro
+          em volta do bloco fica em 24-32px. Densidade se paga no conteudo, nao na moldura — e e
+          isso que separa "profissional" de "apertado".
+       2. LINEAR (software de produto) — restricao: UM acento cromatico, uma familia de fonte,
+          poucos raios. A DECISAO: um unico `--lt-acento`, e cor colorida so em estado interativo
+          e em status. Nada de card verde, roxo, laranja e azul lado a lado como enfeite (que e
+          exatamente o que o Painel de notas faz hoje).
+       3. SEGURANCA EM SOFTWARE CLINICO (AHRQ/AMIA) — em sistema de saude, legibilidade e erro de
+          entrada sao questao de SEGURANCA, nao de estetica: dado fora de faixa tem que ser
+          sinalizado e todo dado exibido tem que ser legivel. A DECISAO: `--lt-txt-min: 12px` como
+          PISO (hoje ha texto de 8px no sistema interno) e numero SEMPRE com `tabular-nums`, pra
+          coluna de preco alinhar digito com digito e a leitura de 2,00 x 20,0 nao depender de
+          sorte.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── GRADE DE 8 (D3) ────────────────────────────────────────────────────────────────────────
+     O 4 existe como MEIO PASSO (borda interna, chip), nao como escala paralela. Medido nas telas
+     de hoje: 1.450 espacamentos fora da grade — a maioria e 5, 6, 7, 10, 15 px, que sao numeros
+     que ninguem escolheu, apareceram.
+
+     >>> A ESCALA GANHOU O 12 E O 20 EM 13/08, E A MEDICAO E QUE MANDOU. A versao de 12/08 era
+         4/8/16/24/32/48/64 — e ela PULAVA a faixa onde o codigo real mora. Contados os 2.559
+         espacamentos escritos a mao nas 17 pecas do molde:
+             os tres valores mais usados sao 10px (468), 8px (329) e 12px (251);
+             1.132 das 2.559 ocorrencias (44%) caem na faixa de 9 a 15px —
+             exatamente onde a escala nao oferecia degrau nenhum entre 8 e 16.
+         >>> ESCALA QUE NAO DA PRA OBEDECER E ESCALA QUE SE CONTORNA, e os 1.450 fora da grade
+             sao a prova disso, nao a causa. Sem o 12, o 10px teria que virar 8 (-20%) ou 16
+             (+60%) — 468 vezes. Nenhum dos dois e conserto: um aperta a tabela que a referencia
+             do Stripe manda manter densa, o outro incha a tela inteira.
+     >>> E ISSO **NAO** E ALARGAR A REGUA PRA CABER O DEFEITO (que ja aconteceu aqui, na fatia 1).
+         A regua da auditoria SEMPRE disse que multiplo de 4 esta na grade — desde a fase 1. O 12
+         e o 20 ja eram "certos" pela regua da casa; o que faltava era TOKEN pra eles. A
+         contradicao era entre dois artefatos nossos, que e a mesma forma do achado do passo 0 da
+         fatia 2 (o tokens.css declarando nomes que o config nunca escreve). O 5, o 6, o 7, o 9,
+         o 10, o 11, o 13, o 14 e o 15 continuam fora, e continuam mudando.
+     >>> A REFERENCIA (Regra Zero): 4/8/12/16/20/24/32/40/48/64 e a escala nuclear do Refactoring
+         UI (Wathan/Schoger) e do Tailwind, dos mesmos autores — passo de 4 ate 24, passo de 8 ate
+         48, e o 64 fecha. Perto de zero 4px e uma diferenca visivel; perto de 48 nao e.
+         >>> O 40 ENTROU DEPOIS DOS OUTROS DOIS, E O MOTIVO E QUE **EU** TINHA ESCRITO A REGRA
+             ERRADA AQUI. Esta linha dizia "passo de 8 daí pra cima" e a escala pulava de 32 pra
+             48 — a propria justificativa nao descrevia a propria escala. Achei aplicando: o
+             `padding: 18px 20px 40px` do rodape do Portal caia a 8px dos dois vizinhos, empate
+             sem resposta boa, e sao 14 ocorrencias de 40px. Consertei a ESCALA, e nao o texto —
+             o texto era a parte que estava certa.
+
+     >>> O NOME E O VALOR, E ISSO E DECISAO DE SEGURANCA, NAO DE GOSTO. A versao antiga numerava
+         por posicao (o 3o degrau chamava-se "e3" e valia 16px). Inserir o 12 ali dentro faria
+         esse mesmo nome valer 16px ontem e 12px hoje: MUDANCA DE SIGNIFICADO CALADA, com o nome
+         intacto e sem um unico erro em lugar
+         nenhum — que e exatamente o defeito que esta reforma ja pegou tres vezes (a regua do
+         emoji, a reserva desalinhada, a regua da grade). Com o valor no nome, degrau novo so pode
+         ser ADITIVO: `--lt-e-12` nunca vira outra coisa.
+         >>> E O MOMENTO E ESTE: hoje NENHUMA das 17 pecas do molde usa var(--lt-e*) — sao 73
+             referencias, todas nossas. Depois da fatia 3 serao milhares. Nao vai ficar mais
+             barato. */
+  --lt-e-0:  0;
+  --lt-e-4:  4px;    /* meio passo: borda interna, chip, folga de icone   */
+  --lt-e-8:  8px;    /* dentro de um grupo (D7)                           */
+  --lt-e-12: 12px;
+  --lt-e-16: 16px;   /* entre grupos                                      */
+  --lt-e-20: 20px;
+  --lt-e-24: 24px;   /* respiro de moldura de bloco                       */
+  --lt-e-32: 32px;
+  --lt-e-40: 40px;
+  --lt-e-48: 48px;   /* separacao de secao                                */
+  --lt-e-64: 64px;
+
+  /* ── TOQUE (fase 2, fatia 5 — o celular) ────────────────────────────────────────────────────
+     `--lt-toque-min` e PISO DE ALVO DE TOQUE, e ele e irmao do `--lt-txt-min` la embaixo: os dois
+     sao os unicos numeros desta reforma que nao sao gosto. O piso de texto guarda o dado LIDO
+     errado; este guarda o dado TOCADO errado — a vendedora em campo, de pe, com uma mao no
+     telefone, encostando no botao errado da linha de cotacao.
+
+     >>> 44px, E POR QUE NAO 24: Apple HIG pede 44pt e Material pede 48dp — os dois numeros vem de
+         medida de dedo, nao de tela. O WCAG 2.2 (criterio 2.5.8, nivel AA) cobra 24px como MINIMO
+         ABSOLUTO, e e ele que costuma ser citado por ser o mais barato de atender. Fica-se no 44:
+         24 e o chao de quem esta sentado com o aparelho apoiado; a mao que este sistema atende
+         esta segurando uma caixa de remedio com a outra.
+
+     >>> ELE E PISO DE CELULAR, NAO DE TELA GRANDE, e isso e decisao escrita: no monitor o alvo e
+         o ponteiro do mouse, que acerta 24px sem esforco. Cobrar 44px no desktop engordaria toda
+         barra de ferramenta densa do sistema em troca de nada. As telas aplicam este token dentro
+         de `@media (max-width:480px)` — o celular ganha a folga, o desktop fica como esta.
+
+     >>> A RESERVA `var(--lt-toque-min, 44px)` E OBRIGATORIA NOS COMPONENTES `.js`, pela mesma
+         razao do degrau de texto: eles pintam ANTES (e as vezes SEM) este arquivo, e um `var()`
+         que nao resolve nao vira 44px — vira declaracao invalida, e o botao volta calado ao
+         tamanho pequeno que a fatia existe pra fechar. */
+  --lt-toque-min: 44px;
+
+  /* ── TIPOGRAFIA ─────────────────────────────────────────────────────────────────────────────
+     UMA familia. Quatro pesos, e nunca mais de dois no mesmo bloco.
+     `--lt-txt-min` e PISO DE SEGURANCA, nao sugestao: abaixo de 12px o dado deixa de ser legivel
+     pra parte da equipe, e num sistema que imprime preco de medicamento isso e risco, nao gosto. */
+  --lt-fonte: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --lt-fonte-num: 'JetBrains Mono', ui-monospace, monospace;
+  --lt-txt-min: 12px;
+  --lt-txt-1: 12px;   /* rotulo, legenda            */
+  --lt-txt-2: 14px;   /* corpo secundario           */
+  --lt-txt-3: 16px;   /* corpo                      */
+  --lt-txt-4: 20px;   /* titulo de bloco            */
+  --lt-txt-5: 28px;   /* titulo de tela             */
+  --lt-txt-6: 36px;   /* numero grande de KPI       */
+  --lt-peso-normal: 400;
+  --lt-peso-medio: 500;
+  --lt-peso-semi: 600;
+  --lt-peso-forte: 700;
+  --lt-linha-densa: 1.3;
+  --lt-linha: 1.5;
+
+  /* ── RAIO ───────────────────────────────────────────────────────────────────────────────── */
+  --lt-raio-1: 6px;    /* campo, chip   */
+  --lt-raio-2: 10px;   /* cartao        */
+  --lt-raio-3: 16px;   /* painel        */
+  --lt-raio-cheio: 999px;
+
+  /* ── SOMBRA: TRES, E CADA UMA TEM UM PAPEL ──────────────────────────────────────────────────
+     1 = repousa na superficie · 2 = destaca do fundo · 3 = flutua sobre tudo (modal, menu).
+     Mais de tres vira decoracao, e decoracao nao comunica profundidade — confunde. */
+  --lt-sombra-1: 0 1px 2px rgba(8, 17, 27, .08);
+  --lt-sombra-2: 0 2px 8px rgba(8, 17, 27, .12);
+  --lt-sombra-3: 0 12px 32px rgba(8, 17, 27, .24);
+
+  /* ── COR: A RAMPA, COM O CONTRASTE MEDIDO AO LADO ───────────────────────────────────────────
+     A marca entra pelo cliente.config.js; estes sao os PAPEIS, e o papel e que garante o
+     contraste. Trocar de cliente troca o tom, nao a regra.
+
+     >>> ELES **DERIVAM** DO CONFIG, E ISSO FOI UM CONSERTO DE 12/08 — a 1a versao chumbava o
+         tom aqui, e estava errada de um jeito que so aparece no PROXIMO CLIENTE. O
+         `aplicaTema()` escreve `--lt-bg`, `--lt-panel`, `--lt-panel2`, `--lt-ciano`,
+         `--lt-ciano2`, `--lt-acao`, `--lt-txt` e `--lt-borda` no <html> a partir do
+         cliente.config.js. Este arquivo declarava `--lt-fundo`, `--lt-superficie` e
+         `--lt-acento` com o valor da GlobalMed ESCRITO A MAO — nomes que o config NAO escreve.
+         >>> O EFEITO: converter as telas pra esses tokens gravaria o navy da GlobalMed dentro
+             do MOLDE. A FPMED (e todo cliente novo) herdaria a cor de outra empresa, e o
+             `aplicaTema` dela nao teria como corrigir — ele escreve outro nome. O defeito seria
+             invisivel aqui e obvio la, que e a pior combinacao.
+     >>> A RESERVA E **NEUTRA**, NAO A COR DA GLOBALMED — e eu errei isso primeiro, na direcao
+         que parecia obvia. Alinhei as reservas com o tom medido da GlobalMed (#0A141C, #3AB6CE)
+         "pra nao ter duas paletas", e a catraca do testa_produtizacao ficou VERMELHA no mesmo
+         commit: ela conta PONTO DE MARCA FORA DO CONFIG, e eu tinha acabado de criar 14. A meta
+         da casa e ZERO, e este arquivo e MOLDE — a marca de um cliente escrita aqui viajaria
+         pra todos.
+         >>> A RESERVA RESPONDE OUTRA PERGUNTA: "o que a tela pinta ANTES de o config chegar, ou
+             se o cliente nao declarar este papel?". A resposta certa e um tom NEUTRO e legivel,
+             nunca a marca de alguem. Quem garante AA no produto de verdade e o
+             tools/mede_contraste.js, que le o cliente.config.js.
+         >>> E A RESERVA TAMBEM PASSA EM AA (assert 12 da testa_tokens): cliente novo, no
+             primeiro dia, ainda ve tela legivel. */
+  --lt-acento:        var(--lt-ciano, #4aa8c0);   /* 6,62:1 no fundo neutro — ACENTO sobre escuro */
+  /* >>> O ACENTO E O FUNDO DE BOTAO **NAO PODEM SER O MESMO TOM**, e essa e a licao inteira da
+         fatia 2: o tom vivo da 2,74:1 com rotulo branco (AA exige 4,5). O botao principal do
+         sistema estava assim desde sempre. `--lt-acao` e o MESMO matiz, escurecido ate o rotulo
+         ficar legivel. O tom continua sendo o do cliente; o PAPEL e que passou a ser dois. */
+  --lt-acento-forte:  var(--lt-acao, #2f7688);    /* 5,16:1 com texto branco — FUNDO de botao   */
+  --lt-acento-fraco:  #e6fff5;                    /* fundo de realce claro                      */
+
+  /* Superficies — o tom vem do cliente; a reserva e NEUTRA (ver acima) */
+  --lt-fundo:         var(--lt-bg, #0f1620);
+  --lt-superficie:    var(--lt-panel, #161f2b);
+  --lt-superficie-2:  var(--lt-panel2, #141b26);
+
+  /* ── COMPARATIVO — paleta local (B_130) ─────────────────────────────────────────────────────
+     >>> Escopada dentro de #page-comparativo no globalmed_sistema_final.html. Nao e escrita
+         pelo aplicaTema() e nao viaja pro cliente novo — e so a reserva que tira o #hex cru
+         de dentro daquele bloco (testa_cor_token conta hex fora de var() como chumbado). */
+  --lt-cmp-bg:         #0a1117;
+  --lt-cmp-panel:      #111a21;
+  --lt-cmp-marca:      #45c9e0;
+  --lt-cmp-marca2:     #7ee0f2;
+  --lt-cmp-borda:      #182430;
+  --lt-cmp-fundo:      #070c11;
+  --lt-cmp-txt:        #c4d6e2;
+  --lt-cmp-txt-fraco:  #8fa4b4;
+  --lt-cmp-superficie: #141d25;
+  --lt-cmp-superficie2:#1a242e;
+  /* A_229: texto PRINCIPAL do Design (o branco do nome LIMEDTEC, MESA 26/09 12:42) — nao tinha
+     par aqui; --lt-cmp-txt (#c4d6e2) e o secundario. Zebra de linha da tabela, mesmo pedido. */
+  --lt-cmp-txt-forte:  #e6f1f8;
+  --lt-cmp-zebra:      #0d151c;
+  /* A_120: a Prospeccao usa a MESMA paleta escura do Design (design/LIMEDTEC-Sistema-standalone.
+     html) — os quatro tons abaixo nao tinham par aqui e estavam chumbados na tela (catraca
+     testa_cor_token). Entram no MOLDE, uma regra um lugar, em vez de duplicar hex na tela. */
+  --lt-cmp-acao:       #2ba6c0;   /* acao/botao — verde-escuro do Design                        */
+  --lt-cmp-erro:       #ff6b6b;   /* vermelho do Design                                         */
+  --lt-cmp-aviso:      #f2b347;   /* amarelo do Design                                          */
+  --lt-cmp-ok:         #3ddc97;   /* verde de sucesso do Design                                 */
+  --lt-cmp-borda-forte:#2a3d4d;   /* borda de campo/chip, um degrau acima da borda decorativa   */
+
+  /* ── BORDA: SAO DUAS, E A DIFERENCA E DE ACESSIBILIDADE, NAO DE GOSTO ───────────────────────
+     >>> A MEDICAO ME OBRIGOU A SEPARAR (12/08). Medindo `--lt-borda` contra a superficie deu
+         1,36:1 e a tabela acusou REPROVA em 3:1. A tentacao era clarear a borda ate passar — e
+         seria o conserto ERRADO: a WCAG 1.4.11 exige 3:1 pra "informacao visual necessaria pra
+         IDENTIFICAR um componente", nao pra todo tracinho. Uma linha que so separa dois blocos
+         que ja se distinguem pelo fundo nao carrega informacao nenhuma; clarea-la deixaria a
+         tela com cara de wireframe, que e o D6 ao contrario ("borda grossa = cara de template").
+     >>> O QUE CARREGA INFORMACAO E OUTRA COISA: a borda de um CAMPO de formulario e, muitas
+         vezes, a unica coisa que diz onde o campo comeca. Essa tem que passar em 3:1 — e passa. */
+  --lt-borda:         #22384a;   /* SEPARADOR decorativo: o bloco ja se distingue pelo fundo   */
+  --lt-borda-forte:   #476f8d;   /* 3,08:1 na superficie — CAMPO, chip, o que precisa ser achado */
+
+  /* Texto — A_237: raiz da regua visual (papeis, nao marca) */
+  --lt-txt:           #c4d6e2;   /* corpo — par do Design (A_229)                              */
+  --lt-txt-fraco:     #8fa4b4;   /* apoio; ainda passa AA no fundo escuro                      */
+  --lt-txt-forte:     #e6f1f8;   /* A_229: branco do nome vira este tom — nunca #fff puro (D4)  */
+
+  /* ESTADO. Estes tons sao os que PASSAM com texto branco — os antigos (#22c55e, #ef4444,
+     #ffb020 com branco) reprovavam, e por isso nao estao aqui. */
+  --lt-ok:            #0f7a45;   /* fundo com texto branco    */
+  --lt-ok-txt:        #3ddc97;   /* texto/icone sobre escuro — A_237: tom do Design            */
+  --lt-atencao:       #8a5a00;   /* fundo com texto branco    */
+  --lt-atencao-txt:   #f2b347;   /* texto/icone sobre escuro — A_237: tom do Design            */
+  --lt-erro:          #b91c1c;   /* fundo com texto branco    */
+  --lt-erro-txt:      #ff6b6b;   /* texto/icone sobre escuro — A_237: tom do Design            */
+
+  /* ── SUPERFICIE CLARA: O OUTRO LADO DA MESMA RAMPA ──────────────────────────────────────────
+     >>> POR QUE ELA PRECISOU EXISTIR, e so descobri medindo pra valer: CINCO das doze telas nao
+         sao escuras. Sistema interno (#EDF1F6), Prospeccao (#f0f4f8), Painel, Vendas Ativas e
+         Viabilidade (#eef4ef) tem fundo CLARO e cartao BRANCO — e o fundo delas nem vem do
+         tema: esta escrito na mao.
+     >>> E A DECISAO NAO FOI "ENTAO ELAS VIRAM ESCURAS". A ordem foi "cada tela mantem sua
+         HIERARQUIA, so entra na rampa nova": quem ganha o lado claro e a RAMPA, nao as telas que
+         mudam de cara. Repintar cinco telas — incluindo a mais usada da casa — seria uma reforma
+         de comportamento visual escondida dentro de uma fatia de acessibilidade.
+     >>> A SIMETRIA QUE ISSO REVELOU, e ela e bonita de propósito: o token que no escuro e
+         "FUNDO com rotulo branco" e, no claro, "TEXTO sobre a superficie". Sao a MESMA medicao —
+         4,5:1 contra o branco. Por isso `--lt-ok`, `--lt-atencao`, `--lt-erro` e
+         `--lt-acento-forte` servem aos dois lados sem um tom novo, e a rampa clara so precisa
+         das SUPERFICIES e dos TEXTOS. */
+  --lt-fundo-claro:        #f2f5f8;   /* pagina clara — acao 4,54:1, apoio 5,01:1 medidos nela  */
+  --lt-superficie-clara:   #ffffff;   /* o cartao                                               */
+  --lt-superficie-clara-2: #e8edf3;   /* o encaixe (campo, faixa) — um degrau abaixo do cartao  */
+  /* D4: nunca preto puro sobre branco puro. */
+  --lt-txt-escuro:         #1a202c;   /* 16,32:1 no branco — corpo                              */
+  --lt-txt-escuro-fraco:   #5a6b7c;   /* 5,48:1 no branco e 5,01:1 no fundo claro — apoio       */
+  --lt-borda-clara:        #dfe6ec;   /* SEPARADOR decorativo (mesma regra da borda escura)      */
+  --lt-borda-clara-forte:  #828e9b;   /* 3,34:1 no branco — CAMPO, chip: o que precisa ser achado */
+
+  /* ── ESCALA CATEGORICA: SEIS TONS QUE NAO SIGNIFICAM NADA — E E ISSO QUE ELES SAO ───────────
+     >>> POR QUE ELA EXISTE, E POR QUE NAO E O D5 SENDO QUEBRADO. O D5 diz que cor e tempero:
+         verde SO em positivo, vermelho SO em perigo. Isso vale pra cor SEMANTICA. Mas a
+         Prospeccao tem um funil de SEIS estagios (Novo, Contatado, Proposta, Negociando,
+         Fechado, Perdido) e nenhum deles e "sucesso" ou "erro" — sao CATEGORIAS. Mapea-las nos
+         quatro tokens de estado diria que "Negociando" e um erro, o que e mentira.
+     >>> O QUE ESTAVA ERRADO, e nao era a existencia delas: os seis tons antigos eram usados como
+         TEXTO (o numero de cada estagio do funil, em 18px negrito) e OS SEIS REPROVAVAM em AA
+         sobre branco — de 2,15:1 (Proposta) a 4,47:1 (Novo). Escurecidos no MESMO matiz, com a
+         saturacao baixada junto pra nao virarem berrantes, e nivelados entre 5,6:1 e 7,1:1: as
+         seis continuam distinguiveis entre si E legiveis.
+     >>> E MORAM AQUI, e nao na tela, por um motivo medido: os seis estavam escritos DUAS vezes
+         dentro do MESMO arquivo (linhas 421 e 732 da Prospeccao). Duas copias da mesma escala e
+         a garantia de que um dia elas discordam (L10). */
+  --lt-cat-1: #474ab8;   /* 7,14:1 no branco */
+  --lt-cat-2: #3867b2;   /* 5,60:1 */
+  --lt-cat-3: #89601a;   /* 5,60:1 */
+  --lt-cat-4: #6a47b8;   /* 6,55:1 */
+  --lt-cat-5: #217559;   /* 5,59:1 */
+  --lt-cat-6: #ca2121;   /* 5,60:1 */
+
+  /* ── FOCO: uma unica regra, e ela NUNCA some ────────────────────────────────────────────────
+     Foco invisivel e tela que so funciona com mouse. Quem opera cotacao o dia inteiro anda de
+     teclado. */
+  --lt-foco: 0 0 0 2px var(--lt-fundo), 0 0 0 4px var(--lt-acento);
+}
+
+/* ═══ CLASSES `.lt-*` — NENHUM SELETOR DE ELEMENTO NU ══════════════════════════════════════════
+   Cada uma so vale onde for escrita a mao. E o que faz este arquivo poder entrar em 12 telas
+   hoje sem mexer em pixel nenhum. */
+
+.lt-superficie { background: var(--lt-superficie); border: 1px solid var(--lt-borda);
+                 border-radius: var(--lt-raio-2); box-shadow: var(--lt-sombra-1); }
+.lt-painel     { background: var(--lt-superficie); border: 1px solid var(--lt-borda);
+                 border-radius: var(--lt-raio-3); padding: var(--lt-e-24); box-shadow: var(--lt-sombra-2); }
+
+.lt-t1 { font: var(--lt-peso-forte) var(--lt-txt-5)/var(--lt-linha-densa) var(--lt-fonte); color: var(--lt-txt-forte); }
+.lt-t2 { font: var(--lt-peso-semi) var(--lt-txt-4)/var(--lt-linha-densa) var(--lt-fonte); color: var(--lt-txt-forte); }
+.lt-corpo { font: var(--lt-peso-normal) var(--lt-txt-3)/var(--lt-linha) var(--lt-fonte); color: var(--lt-txt); }
+.lt-apoio { font: var(--lt-peso-normal) var(--lt-txt-2)/var(--lt-linha) var(--lt-fonte); color: var(--lt-txt-fraco); }
+.lt-rotulo { font: var(--lt-peso-medio) var(--lt-txt-1)/var(--lt-linha) var(--lt-fonte);
+             color: var(--lt-txt-fraco); letter-spacing: .04em; text-transform: uppercase; }
+
+/* NUMERO SEMPRE TABULAR. Sem isso, uma coluna de preco desalinha digito com digito e a diferenca
+   entre 2,00 e 20,0 passa a depender de o leitor estar atento. Numa tela que fecha proposta de
+   hospital, isso e seguranca. */
+.lt-num { font-family: var(--lt-fonte-num); font-variant-numeric: tabular-nums;
+          font-feature-settings: 'tnum' 1; }
+
+.lt-btn { display: inline-flex; align-items: center; gap: var(--lt-e-8);
+          padding: var(--lt-e-8) var(--lt-e-16); min-height: 40px;
+          border-radius: var(--lt-raio-1); border: 1px solid transparent; cursor: pointer;
+          font: var(--lt-peso-semi) var(--lt-txt-2)/1 var(--lt-fonte); }
+.lt-btn-1 { background: var(--lt-acento-forte); color: #fff; }          /* 5,40:1 — medido */
+.lt-btn-2 { background: transparent; color: var(--lt-txt); border-color: var(--lt-borda); }
+.lt-btn:focus-visible { outline: none; box-shadow: var(--lt-foco); }
+.lt-btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* ALVO DE TOQUE: 44px e o minimo. Medido nas telas de hoje: 130 alvos abaixo disso so no Painel. */
+.lt-toque { min-height: 44px; min-width: 44px; }
+
+.lt-chip { display: inline-flex; align-items: center; gap: var(--lt-e-4);
+           padding: var(--lt-e-4) var(--lt-e-8); border-radius: var(--lt-raio-cheio);
+           border: 1px solid var(--lt-borda); background: transparent;
+           font: var(--lt-peso-medio) var(--lt-txt-1)/1 var(--lt-fonte); color: var(--lt-txt-fraco); }
+.lt-chip-ativo { background: var(--lt-acento-forte); border-color: var(--lt-acento-forte); color: #fff; }
+
+/* ICONE: o contrato que substitui o emoji. `currentColor`, traco de 1.5, e TAMANHO EM `em`.
+   >>> A 1a VERSAO CRAVAVA 20px, E ESTAVA ERRADA — descobri aplicando nas telas de verdade, na
+       fatia 1. O emoji que este icone substitui e TEXTO: ele ja acompanhava a fonte de quem o
+       continha. Nas 12 telas o mesmo icone aparece ao lado de titulo de 20px e dentro de badge
+       de 10px; cravar 20px poe um desenho do tamanho da linha inteira dentro do badge, e um
+       desenho pequeno demais no titulo. Em `em` ele faz o que o emoji fazia de certo — segue a
+       fonte — e o que o emoji fazia de errado (cada um com um peso e uma cor) continua resolvido.
+   >>> `vertical-align` existe pelo mesmo motivo: SVG inline senta na linha de base e afunda o
+       texto ao lado. O emoji nao tinha esse problema porque era glifo. */
+.lt-icone { width: 1.15em; height: 1.15em; flex: 0 0 auto; vertical-align: -.18em;
+            stroke: currentColor; fill: none;
+            stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+/* Os tamanhos FIXOS, pra quando o icone nao acompanha texto nenhum (cartao, estado vazio). */
+.lt-icone-16 { width: 16px; height: 16px; } .lt-icone-20 { width: 20px; height: 20px; }
+.lt-icone-24 { width: 24px; height: 24px; } .lt-icone-32 { width: 32px; height: 32px; }
+.lt-icone-48 { width: 48px; height: 48px; }
+
+/* TABELA: densa por dentro (Stripe), com respiro por fora. */
+.lt-tabela { width: 100%; border-collapse: collapse; font: var(--lt-peso-normal) var(--lt-txt-2)/1.4 var(--lt-fonte); }
+.lt-tabela-cel { padding: var(--lt-e-8) var(--lt-e-16); border-bottom: 1px solid var(--lt-borda);
+                 color: var(--lt-txt); height: 36px; }
+.lt-tabela-cab { padding: var(--lt-e-8) var(--lt-e-16); border-bottom: 1px solid var(--lt-borda);
+                 font: var(--lt-peso-medio) var(--lt-txt-1)/1 var(--lt-fonte); color: var(--lt-txt-fraco);
+                 letter-spacing: .04em; text-transform: uppercase; text-align: left; }
+
+/* ESTADOS DA TELA — os que hoje nao existem desenhados em lugar nenhum. */
+/* ESQUELETO — ele tem que ser VISIVEL contra a superficie em que mora, e a 1a versao nao era:
+   eu usei `--lt-superficie` como base, que e exatamente a cor do cartao em volta. O bloco de
+   "carregando" aparecia VAZIO na amostra — o mesmo defeito que a auditoria acusa nas telas de
+   hoje ("o traco parece dado; deveria parecer espera"), agora cometido por mim.
+   A base sobe um degrau (superficie-2) e o brilho sobe outro. */
+.lt-esqueleto { background: linear-gradient(90deg, var(--lt-superficie-2) 25%, #24506b 37%, var(--lt-superficie-2) 63%);
+                background-size: 400% 100%; animation: lt-brilho 1.4s ease infinite;
+                border-radius: var(--lt-raio-1); min-height: 10px; }
+@keyframes lt-brilho { 0% { background-position: 100% 50% } 100% { background-position: 0 50% } }
+.lt-vazio { padding: var(--lt-e-48) var(--lt-e-24); text-align: center; border: 1px dashed var(--lt-borda);
+            border-radius: var(--lt-raio-2); color: var(--lt-txt-fraco); }
+/* ERRO QUE NAO GRITA: informa, cabe na tela, e nao pinta metade dela de vermelho. */
+.lt-erro-faixa { display: flex; gap: var(--lt-e-8); align-items: flex-start;
+                 padding: var(--lt-e-16); border-radius: var(--lt-raio-1);
+                 border: 1px solid var(--lt-erro); border-left-width: 3px;
+                 background: color-mix(in srgb, var(--lt-erro) 12%, transparent);
+                 color: var(--lt-txt); font: var(--lt-peso-normal) var(--lt-txt-2)/var(--lt-linha) var(--lt-fonte); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-esqueleto { animation: none; }
+}

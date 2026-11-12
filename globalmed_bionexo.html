@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="gm-versao" content="03/11/2026 13:43">
+<title data-limedtec-titulo="Bionexo">LIMEDTEC</title>
+<!-- A_N65 (14/10/2026): aba BIONEXO — toda resposta que o robô mandou no portal, para o dono conferir.
+     Palavra do dono: "faz uma aba de BIONEXO e coloca todas as cotações que robo fazer la pra mim
+     controlaar e verificar". Só LÊ a tabela bionexo_respostas; não escreve nada e não recalcula preço. -->
+<script src="cliente.config.js"></script>
+<script src="limedtec-config.js"></script>
+<script>LIMEDTEC.aplicaTema();</script>
+<script src="gm-auth.js"></script>
+<script src="limedtec-papeis.js"></script>
+<!-- preço de compra e régua de mercado: a linha que separa vendedor de gerente (ver_custo) -->
+<script src="limedtec-sessao.js" data-exige="ver_custo"></script>
+<link rel="stylesheet" href="limedtec-tokens.css">
+<script src="limedtec-icones.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lt-fundo:#070c11; --lt-fundo-claro:#0a1117; --lt-superficie-clara:#111a21; --lt-superficie-clara-2:#1a242e;
+    --lt-borda-clara:#182430; --lt-borda-clara-forte:#2a3d4d; --lt-txt:#8fa4b4; --lt-txt-escuro:#c4d6e2;
+    --lt-acento:#45c9e0; --lt-ok:#3ddc97; --lt-atencao:#f2b347; --lt-erro:#ff6b6b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Manrope','Segoe UI',system-ui,sans-serif; }
+  body { background:var(--lt-fundo-claro); color:var(--lt-txt-escuro); }
+  .wrap { padding:20px 24px; max-width:1500px; }
+  .num, td.right, th.right { font-family:'JetBrains Mono',monospace; text-align:right; white-space:nowrap; }
+  .barra { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:14px; }
+  .barra label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--lt-txt); }
+  .barra input, .barra select { background:var(--lt-superficie-clara); border:1px solid var(--lt-borda-clara-forte);
+    color:var(--lt-txt-escuro); padding:7px 9px; border-radius:6px; font-size:13px; }
+  .barra button { background:var(--lt-superficie-clara-2); border:1px solid var(--lt-borda-clara-forte); color:var(--lt-txt-escuro);
+    padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .placar { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; }
+  .cartao { background:var(--lt-superficie-clara); border:1px solid var(--lt-borda-clara); border-radius:8px; padding:10px 14px; min-width:150px; }
+  .cartao .n { font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--lt-acento); }
+  .cartao .r { font-size:12px; color:var(--lt-txt); }
+  .data-dado { font-size:12px; color:var(--lt-txt); margin-bottom:10px; }
+  #aviso { display:none; border:1px solid var(--lt-atencao); color:var(--lt-atencao); background:#2a2110; padding:10px 14px; border-radius:8px; margin-bottom:12px; font-size:13px; }
+  #aviso.erro { border-color:var(--lt-erro); color:var(--lt-erro); background:#2a1414; }
+  .tabela-cx { overflow-x:auto; border:1px solid var(--lt-borda-clara); border-radius:8px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th { background:var(--lt-fundo); color:var(--lt-txt); text-align:left; font-weight:600; padding:9px 10px; position:sticky; top:0; border-bottom:1px solid var(--lt-borda-clara-forte); white-space:nowrap; }
+  td { padding:9px 10px; border-bottom:1px solid var(--lt-borda-clara); vertical-align:top; }
+  tr:hover td { background:var(--lt-superficie-clara-2); }
+  .sub { color:var(--lt-txt); font-size:12px; }
+  .selo { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:700; }
+  .selo.enviada { background:#10303a; color:var(--lt-acento); }
+  .selo.ganha { background:#10301f; color:var(--lt-ok); }
+  .selo.resgatada { background:#10301f; color:var(--lt-ok); }
+  .selo.perdida { background:#2a1414; color:var(--lt-erro); }
+  .vazio { padding:28px; text-align:center; color:var(--lt-txt); }
+  .grp-cnpj td { background:#0d1620; border-top:2px solid var(--lt-borda-clara-forte); font-weight:700; color:var(--lt-txt-escuro); font-size:13px; }
+  .grp-cot td { background:#0b131a; font-weight:600; color:var(--lt-acento); border-bottom:1px solid var(--lt-borda-clara-forte); }
+  tr.cot { cursor:pointer; }
+  tr.cot td { background:#0d1620; border-top:2px solid var(--lt-borda-clara-forte); }
+  tr.det[hidden] { display:none; }
+  .corr { color:var(--lt-atencao); }
+  .nota-conta { font-size:12px; color:var(--lt-txt); margin:0 0 10px; line-height:1.5; }
+  .grp-cot b { color:var(--lt-txt-escuro); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="data-dado" id="data-dado">carregando…</div>
+  <div id="aviso"></div>
+  <div class="barra">
+    <label>De <input type="date" id="f-de"></label>
+    <label>Até <input type="date" id="f-ate"></label>
+    <label>Estado
+      <select id="f-estado">
+        <option value="">todos</option><option value="enviada">em negociação</option>
+        <option value="ganha">ganha</option><option value="resgatada">resgatada</option><option value="perdida">perdida</option>
+      </select>
+    </label>
+    <script src="limedtec-busca-cotacao.js"></script><script>document.write(LTBUSCA.campo())</script>
+    <button id="b-atualiza" type="button">Atualizar agora</button>
+  </div>
+  <div class="placar" id="placar"></div>
+  <div class="nota-conta" id="nota-conta"></div>
+  <div class="tabela-cx"><table>
+    <thead><tr>
+      <th>Quando</th><th>Cotação</th><th>Comprador</th><th class="right">Itens</th>
+      <th class="right">Total enviado</th><th>Estado</th><th></th>
+    </tr></thead>
+    <tbody id="corpo"></tbody>
+  </table></div>
+  <div class="nota-conta" id="nao-cotados"></div>
+</div>
+
+<script id="logica">
+/* Lógica pura (sem DOM): é o que tests/testa_bionexo_tela.js executa. */
+var BX = (function () {
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function num(v) { return v == null || v === '' ? null : Number(v); }
+  function brl(v, casas) {
+    var n = num(v); if (n == null || isNaN(n)) return '—';
+    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: casas == null ? 2 : casas, maximumFractionDigits: casas == null ? 2 : casas });
+  }
+  function dataHora(iso) {
+    if (!iso) return '—'; var d = new Date(iso); if (isNaN(d)) return '—';
+    return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function diaBR(iso) { // AAAA-MM-DD no fuso de Brasília
+    if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return '';
+    var p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(d); return p;
+  }
+  // N94 (16/10): valor VIGENTE = o que a GlobalMed de fato ofereceu. Se o dono corrigiu no portal e a
+  // correção foi gravada (colunas aditivas preco_unit_corrigido/corrigido_em), vale ela; senão vale o do robô.
+  // A tela só escolhe qual número desenhar; não calcula preço de mercado.
+  function vigente(r) {
+    var cor = num(r.preco_unit_corrigido), q = num(r.quantidade);
+    if (cor != null && !isNaN(cor)) {
+      return { unit: cor, total: q != null ? Math.round(q * cor * 100) / 100 : null, corrigido: true,
+               robo: num(r.preco_unit), em: r.corrigido_em || null, por: r.corrigido_por || 'dono' };
+    }
+    return { unit: num(r.preco_unit), total: num(r.preco_total), corrigido: false };
+  }
+  // Ausente ≠ zero: o que não veio escreve "não gravado", nunca 0. custo × margem de emergência NÃO é régua (lei 16/09): é piso de emergência.
+  var NOMES_REGUA = {
+    custo_x_1_32: 'piso de emergência (custo × margem mínima da casa) — não é sugestão de mercado',
+    tela_estoque_proprio: 'preço da tela do estoque próprio (passou pelo crivo)',
+    A: 'A · custo do mercado', B: 'B · venda do mercado'
+  };
+  function regua(r) {
+    var nome = r.regua ? (NOMES_REGUA[r.regua] || ('régua ' + r.regua)) : 'régua não gravada';
+    var base = 'preços: ' + (r.n_precos != null ? r.n_precos : 'não gravado')
+             + ' · fornecedores: ' + (r.n_fornecedores != null ? r.n_fornecedores : 'não gravado')
+             + ' · data do mais novo: ' + (r.data_mais_novo ? String(r.data_mais_novo).split('-').reverse().join('/') : 'não gravada');
+    return esc(nome) + '<div class="sub">' + esc(base) + '</div>';
+  }
+  function condicoes(r) {
+    var p = [];
+    if (r.pagamento_dias != null) p.push(r.pagamento_dias + ' dias');
+    if (r.frete) p.push('frete ' + esc(r.frete));
+    if (r.prazo_entrega_dias != null) p.push('entrega ' + r.prazo_entrega_dias + ' dias');
+    if (r.pedido_minimo != null) p.push('mín. ' + brl(r.pedido_minimo));
+    if (r.validade) p.push('valida até ' + String(r.validade).split('-').reverse().join('/'));
+    return p.length ? esc(p.join(' · ')) : '<span class="sub">não informadas</span>';
+  }
+  function rotulo(est) { return BXCOMPRAS.rotuloEstado(est); } // uma regra, um lugar: bionexo-compras.js
+  // Estado 'resgatada' = ganhamos E o robô viu o pedido em Compras > Fornecimento > Pedidos (coluna aditiva resgatado_em).
+  // O CHECK de estado fica intocado (esquema só aditivo). Sem a coluna/valor, nada muda: 'não sei ainda' vale (decisão 30).
+  function normaliza(rows) {
+    return rows.map(function (r) { var x = (r.estado === 'ganha' && r.resgatado_em) ? Object.assign({}, r, { estado: 'resgatada' }) : r; return BXCOMPRAS.semPedido(x) ? Object.assign({}, x, { estado: 'sem_pedido' }) : x; });
+  }
+  function linha(r) {
+    var est = (r.estado === 'ganha' || r.estado === 'perdida' || r.estado === 'resgatada' || r.estado === 'sem_pedido') ? r.estado : 'enviada';
+    var comprador = esc(r.comprador || 'não informado')
+      + '<div class="sub">' + esc([r.cnpj_comprador, [r.cidade, r.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ') || 'CNPJ/cidade não informados') + '</div>';
+    var v = vigente(r);
+    var marca = v.corrigido ? '<div class="sub corr">corrigido pelo dono no portal' + (v.em ? ' em ' + esc(dataHora(v.em)) : '') + (v.robo != null ? ' · robô gravou ' + esc(brl(v.robo, 4)) : '') + '</div>' : '';
+    var un = r.unidade ? ' <span class="sub">/ ' + esc(r.unidade) + '</span>' : '';
+    return '<tr data-cotacao="' + esc(r.bionexo_id) + '">'
+      + '<td>' + esc(dataHora(r.respondida_em)) + '</td>'
+      + '<td class="num">' + esc(r.bionexo_id) + '</td>'
+      + '<td>' + comprador + '</td>'
+      + '<td>' + esc(r.item_pedido) + '<div class="sub">→ ' + esc(r.item_nosso || 'não informado') + '</div></td>'
+      + '<td class="right">' + (num(r.quantidade) != null ? num(r.quantidade).toLocaleString('pt-BR') : '—') + '</td>'
+      + '<td class="right">' + brl(v.unit, 4) + un + marca + '</td>'
+      + '<td class="right">' + brl(v.total) + '</td>'
+      + '<td>' + regua(r) + '</td>'
+      + '<td>' + condicoes(r) + '</td>'
+      + '<td><span class="selo ' + est + '">' + rotulo(est) + '</span>'
+      + (r.estado_em ? '<div class="sub">' + esc(dataHora(r.estado_em)) + '</div>' : '') + '</td></tr>';
+  }
+  function filtra(rows, f) {
+    f = f || {};
+    return rows.filter(function (r) {
+      var dia = diaBR(r.respondida_em);
+      if (f.de && (!dia || dia < f.de)) return false;
+      if (f.ate && (!dia || dia > f.ate)) return false;
+      if (f.estado && r.estado !== f.estado) return false;
+      return true;
+    });
+  }
+  function resumo(rows) {
+    var tot = 0, ganho = 0, nGanhas = 0;
+    rows.forEach(function (r) { var t = vigente(r).total || 0; tot += t; if (r.estado === 'ganha' || r.estado === 'resgatada') { ganho += t; nGanhas++; } });
+    var cot = {}; rows.forEach(function (r) { cot[r.bionexo_id] = 1; });
+    return { respostas: rows.length, cotacoes: Object.keys(cot).length, total: tot, ganho: ganho, nGanhas: nGanhas };
+  }
+  // Decide o que a tela diz depois do fetch. Erro NUNCA vira "nenhuma resposta" (lição 30).
+  function classifica(status, corpo) {
+    if (status === 200 && Array.isArray(corpo)) return { tipo: corpo.length ? 'ok' : 'vazio' };
+    var txt = corpo && (corpo.code || corpo.message) ? String(corpo.code || '') + ' ' + String(corpo.message || '') : '';
+    if (status === 404 || /PGRST205|does not exist|Could not find/i.test(txt))
+      return { tipo: 'sem_tabela', msg: 'A tabela bionexo_respostas ainda não existe no banco (falta rodar auditoria/A_N65_DDL.sql). Isto NÃO quer dizer que o robô não respondeu nada.' };
+    if (status === 401 || status === 403)
+      return { tipo: 'erro', msg: 'Sem permissão para ler as respostas (HTTP ' + status + '). Entre de novo ou fale com quem libera o acesso a custo.' };
+    return { tipo: 'erro', msg: 'Não consegui ler as respostas (HTTP ' + status + '). O que aparece abaixo pode estar incompleto — não é "zero".' };
+  }
+  // Agrupa as linhas por CNPJ do comprador e, dentro, por cotação (bionexo_id).
+  // Mantém a ordem do mais recente primeiro. Não recalcula preço — só soma o que veio.
+  function agrupa(rows) {
+    var porCnpj = {};
+    rows.forEach(function (r) {
+      var ck = (r.cnpj_comprador || 'sem-cnpj') + '';
+      if (!porCnpj[ck]) porCnpj[ck] = { cnpj: r.cnpj_comprador, comprador: r.comprador, cidade: r.cidade, uf: r.uf, cots: {}, ordem: r.respondida_em || '', total: 0, nItens: 0 };
+      var g = porCnpj[ck];
+      if ((r.respondida_em || '') > g.ordem) g.ordem = r.respondida_em || '';
+      if (!g.comprador && r.comprador) g.comprador = r.comprador;
+      var bk = (r.bionexo_id || '?') + '';
+      if (!g.cots[bk]) g.cots[bk] = { id: r.bionexo_id, respondida_em: r.respondida_em || '', itens: [], subtotal: 0, estados: {} };
+      var c = g.cots[bk];
+      c.itens.push(r);
+      c.subtotal += vigente(r).total || 0;
+      if ((r.respondida_em || '') > c.respondida_em) c.respondida_em = r.respondida_em || '';
+      var est = (r.estado === 'ganha' || r.estado === 'perdida' || r.estado === 'resgatada' || r.estado === 'sem_pedido') ? r.estado : 'enviada';
+      c.estados[est] = (c.estados[est] || 0) + 1;
+      g.total += vigente(r).total || 0;
+      g.nItens += 1;
+    });
+    return Object.keys(porCnpj).map(function (k) {
+      var g = porCnpj[k];
+      g.cotacoes = Object.keys(g.cots).map(function (bk) { return g.cots[bk]; })
+        .sort(function (a, b) { return (b.respondida_em || '').localeCompare(a.respondida_em || ''); });
+      return g;
+    }).sort(function (a, b) { return (b.ordem || '').localeCompare(a.ordem || ''); });
+  }
+  // N98: o portal grava no comprador textos como "Cotação Normal ID: 669664153 · Cotação Quinzenal Medicamento…".
+  // A tela mostra só a parte útil; não altera o banco.
+  function limpaComprador(s) {
+    var t = String(s == null ? '' : s).trim();
+    for (var i = 0; i < 4; i++) {
+      var u = t.replace(/^(?:Cota[cç][aã]o\s+(?:Normal|Emergencial)|PDC)\s+ID:?\s*\d+\s*[·\-–:]?\s*/i, '').trim();
+      if (u === t) break; t = u;
+    }
+    return t;
+  }
+  // N98: UMA linha por cotação (bionexo_id), mais nova primeiro. Só soma o que veio; não recalcula preço.
+  function cotacoes(rows) {
+    var m = {};
+    rows.forEach(function (r) {
+      var k = (r.bionexo_id || '?') + '';
+      var c = m[k] || (m[k] = { id: r.bionexo_id, respondida_em: '', comprador: '', cnpj: null, cidade: null, uf: null, itens: [], total: 0, estados: {} });
+      c.itens.push(r);
+      if ((r.respondida_em || '') > c.respondida_em) c.respondida_em = r.respondida_em || '';
+      var nome = limpaComprador(r.comprador); if (!c.comprador && nome) c.comprador = nome;
+      if (!c.cnpj && r.cnpj_comprador) c.cnpj = r.cnpj_comprador;
+      if (!c.cidade && r.cidade) { c.cidade = r.cidade; c.uf = r.uf; }
+      c.total += vigente(r).total || 0;
+      var est = (r.estado === 'ganha' || r.estado === 'perdida' || r.estado === 'resgatada' || r.estado === 'sem_pedido') ? r.estado : 'enviada';
+      c.estados[est] = (c.estados[est] || 0) + 1;
+    });
+    return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return (b.respondida_em || '').localeCompare(a.respondida_em || ''); });
+  }
+  // VER-1 (F_047): itens que o robo NAO cotou, agrupados por motivo em palavra de gente. A tela so conta e desenha; o motivo vem gravado pelo robo.
+  var MOTIVOS_GENTE = {
+    sem_candidato_no_motor: 'Não temos esse produto no sistema',
+    material_fora_do_robo: 'Material fora do que o robô cota (não é remédio)',
+    forma_desconhecida: 'Não deu para saber a forma (comprimido, ampola…)',
+    principio_ativo_diferente: 'O parecido que achamos é outro remédio',
+    candidato_sem_custo: 'Achamos o produto, mas sem custo de fornecedor',
+    preco_diverge_da_tela: 'O preço do robô não bateu com o da tela',
+    dose_diferente_ou_desconhecida: 'A dose é diferente ou não deu para saber',
+    apresentacao_diferente_ou_desconhecida: 'A embalagem é diferente ou não deu para saber',
+    volume_diferente_ou_desconhecido: 'O volume é diferente ou não deu para saber',
+    volume_diferente: 'O volume é diferente',
+    unidade_pedida_ambigua: 'O comprador pediu em unidade que não dá para entender',
+    associacao_diferente: 'É uma associação de remédios diferente',
+    confianca_baixa: 'O robô não teve certeza do casamento',
+    preco_abaixo_do_global: 'O preço ficaria abaixo do nosso piso',
+    solucao_concentracao_desconhecida: 'Concentração da solução desconhecida'
+  };
+  function motivoGente(cod) { return MOTIVOS_GENTE[cod] || ('Outro motivo (' + cod + ')'); }
+  function agrupaNaoCotados(rows) {
+    var g = {}, ult = null;
+    (rows || []).forEach(function (r) {
+      var k = r.motivo_codigo || String(r.motivo || 'sem_motivo').split(':')[0];
+      (g[k] = g[k] || { codigo: k, nome: motivoGente(k), n: 0, itens: [] }).n++; g[k].itens.push(r);
+      if (r.visto_em && (!ult || r.visto_em > ult)) ult = r.visto_em;
+    });
+    return { grupos: Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return b.n - a.n; }), total: (rows || []).length, visto_em: ult };
+  }
+  return { motivoGente: motivoGente, agrupaNaoCotados: agrupaNaoCotados, limpaComprador: limpaComprador, cotacoes: cotacoes, esc: esc, brl: brl, dataHora: dataHora, linha: linha, filtra: filtra, resumo: resumo, classifica: classifica, diaBR: diaBR, agrupa: agrupa, vigente: vigente, rotulo: rotulo, normaliza: normaliza };
+})();
+if (typeof module !== 'undefined') module.exports = BX;
+</script>
+
+<script src="limedtec-esgotado.js"></script>
+<script src="limedtec-cotacao-vencida.js"></script>
+<script src="bionexo-compras.js"></script>
+<script src="alerta-ganho.js"></script>
+<script src="limedtec-enviar-compras.js"></script>
+<script src="limedtec-layout.js"></script>
+<script>
+(function () {
+  if (typeof document === 'undefined' || !document.getElementById('corpo')) return;
+  var todas = [], ultimaLeitura = null, estadoLeitura = null, naoCotados = null;
+  function $(id) { return document.getElementById(id); }
+  function aviso(msg, erro) { var a = $('aviso'); a.className = erro ? 'erro' : ''; a.textContent = msg || ''; a.style.display = msg ? 'block' : 'none'; }
+
+  var buscandoFora = false;
+  async function buscaFora() {
+    var termo = $('f-busca').value; buscandoFora = true;
+    var res = await LTBUSCA.noBanco(termo, { fetch: window.fetch.bind(window), url: LIMEDTEC.urlBanco(), headers: LIMEDTEC.cabecalhosDados(), tabela: 'bionexo_respostas' });
+    buscandoFora = false; if ($('f-busca').value !== termo) return;
+    if (res.achou) { var ids = {}; todas.forEach(function (x) { ids[x.id] = 1; }); todas = todas.concat(BX.normaliza(res.rows).filter(function (x) { return !(x.id != null && ids[x.id]); })); desenha(); }
+    else aviso(LTBUSCA.msgNaoAchou(termo, res.erro), res.erro);
+  }
+
+  function desenha() {
+    var f = { de: $('f-de').value, ate: $('f-ate').value, estado: $('f-estado').value };
+    var rows = LTBUSCA.filtra(BX.filtra(todas, f), $('f-busca').value);
+    if (!rows.length && LTBUSCA.limpa($('f-busca').value) && !buscandoFora) { buscaFora(); }
+    var r = BX.resumo(rows);
+    $('placar').innerHTML =
+      '<div class="cartao"><div class="n">' + r.respostas + '</div><div class="r">itens cotados</div></div>'
+      + '<div class="cartao"><div class="n">' + r.cotacoes + '</div><div class="r">cotações</div></div>'
+      + '<div class="cartao"><div class="n">' + BX.esc(BX.brl(r.total)) + '</div><div class="r">total enviado (qtd cheia pedida · não é venda)</div></div>'
+      + '<div class="cartao"><div class="n">' + BX.esc(r.nGanhas ? BX.brl(r.ganho) : 'ainda não registradas') + '</div><div class="r">total das ganhas</div></div>';
+    $('nota-conta').innerHTML = 'O que os números contam: <b>cotações</b> = cotações com pelo menos um item gravado em <i>bionexo_respostas</i> no filtro acima (o robô grava depois do envio; enviada e ainda não gravada não aparece aqui); <b>itens</b> = linhas gravadas, não itens do pedido do comprador; <b>projeção</b> = quantidade cheia × valor vigente (corrigido à mão vale mais que o do robô). Itens barrados pelo teto de sanidade ou pelo crivo da tela não são gravados aqui: <b>não gravado</b> — o robô só registra isso no log local.';
+    if (!rows.length) {
+      var msg = estadoLeitura === 'sem_tabela' || estadoLeitura === 'erro' ? 'Sem dados para mostrar (veja o aviso acima).'
+        : (todas.length ? 'Nenhuma resposta nesse filtro.' : 'O robô ainda não enviou nenhuma resposta.');
+      $('corpo').innerHTML = '<tr><td colspan="10" class="vazio">' + BX.esc(msg) + '</td></tr>';
+    } else {
+      var html = '';
+      BX.cotacoes(rows).forEach(function (c) {
+        var selos = Object.keys(c.estados).map(function (e) { return '<span class="selo ' + e + '">' + BX.rotulo(e) + (Object.keys(c.estados).length > 1 ? ' ' + c.estados[e] : '') + '</span>'; }).join(' ');
+        var sub = [c.cnpj || 'CNPJ não gravado', [c.cidade, c.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ');
+        var pode = LTCOMPRAS.podeCotacao(c, BXCOMPRAS);
+        html += '<tr class="cot" data-abre="' + BX.esc(c.id) + '"><td>' + BX.esc(BX.dataHora(c.respondida_em)) + '</td>'
+          + '<td class="num"><span class="seta">▸</span> <b>' + BX.esc(c.id) + '</b></td>'
+          + '<td>' + BX.esc(c.comprador || 'não informado') + '<div class="sub">' + BX.esc(sub) + '</div></td>'
+          + '<td class="right">' + c.itens.length + '</td>'
+          + '<td class="right">' + BX.esc(BX.brl(c.total)) + '</td>'
+          + '<td>' + selos + '</td>'
+          + '<td>' + LTCOMPRAS.botao(c.id, pode, BX.esc) + '</td></tr>';
+        html += '<tr class="det" data-det="' + BX.esc(c.id) + '" hidden><td colspan="7"><div class="tabela-cx"><table><thead><tr>'
+          + '<th>Quando</th><th>Cotação</th><th>Comprador</th><th>Item pedido → item nosso</th><th class="right">Qtd</th><th class="right">Preço unit.</th><th class="right">Total</th>'
+          + '<th>De onde saiu o preço (régua · preços · fornecedores · data)</th><th>Condições</th><th>Estado</th></tr></thead><tbody>'
+          + c.itens.map(BX.linha).join('') + '</tbody></table></div></td></tr>';
+      });
+      $('corpo').innerHTML = html;
+    }
+    var nova = todas.length ? todas[0].respondida_em : null;
+    $('data-dado').textContent = 'Lido do banco em ' + BX.dataHora(ultimaLeitura)
+      + (nova ? ' · resposta mais recente: ' + BX.dataHora(nova) : '');
+  }
+
+  function desenhaNaoCotados() {
+    var el = $('nao-cotados'); if (!el) return;
+    if (naoCotados === null) { el.innerHTML = '<b>Itens NÃO cotados:</b> ainda não deu para ler (a tabela pode não existir ainda). Isto não quer dizer que não haja.'; return; }
+    var a = BX.agrupaNaoCotados(naoCotados);
+    if (!a.total) { el.innerHTML = '<b>Itens NÃO cotados:</b> nenhum gravado ainda.'; return; }
+    el.innerHTML = '<b>Itens NÃO cotados pelo robô: ' + a.total + '</b> · último visto em ' + BX.esc(BX.dataHora(a.visto_em)) + '. Cada item aparece uma vez (a última rodada vale).'
+      + a.grupos.map(function (g) {
+        return '<details style="margin-top:6px"><summary><b>' + g.n + '</b> · ' + BX.esc(g.nome) + '</summary><div class="sub">'
+          + g.itens.slice(0, 40).map(function (r) { return BX.esc(r.item_texto) + (r.candidato_rejeitado ? ' <i>(achou: ' + BX.esc(r.candidato_rejeitado) + ')</i>' : '') + ' · cotação ' + BX.esc(r.bionexo_id); }).join('<br>')
+          + (g.n > 40 ? '<br>… e mais ' + (g.n - 40) : '') + '</div></details>';
+      }).join('');
+  }
+  async function carregaNaoCotados() {
+    try {
+      var r = await fetch(LIMEDTEC.urlBanco() + '/rest/v1/bionexo_nao_cotados?select=*&order=visto_em.desc&limit=5000', { headers: LIMEDTEC.cabecalhosDados(), cache: 'no-store' });
+      var c = null; try { c = await r.json(); } catch (e) {}
+      naoCotados = (r.status === 200 && Array.isArray(c)) ? c : null;
+    } catch (e) { naoCotados = null; }
+    desenhaNaoCotados();
+  }
+
+  async function carrega() {
+    carregaNaoCotados();
+    var url = LIMEDTEC.urlBanco() + '/rest/v1/bionexo_respostas?select=*&order=respondida_em.desc&limit=1000';
+    var H = LIMEDTEC.cabecalhosDados();
+    try {
+      var r = await fetch(url, { headers: H, cache: 'no-store' });
+      var corpo = null; try { corpo = await r.json(); } catch (e) {}
+      var c = BX.classifica(r.status, corpo);
+      estadoLeitura = c.tipo;
+      if (c.tipo === 'ok' || c.tipo === 'vazio') { todas = BX.normaliza(corpo); aviso(''); try { ALERTAGANHO.ligaNaTela('BIONEXO', todas, document, localStorage); } catch (e) {} }
+      else aviso(c.msg, c.tipo === 'erro');
+    } catch (e) {
+      estadoLeitura = 'erro'; aviso('Sem conexão com o banco. O que aparece abaixo pode estar velho — não é "zero".', true);
+    }
+    ultimaLeitura = new Date().toISOString();
+    desenha();
+  }
+
+  try { LIMEDTEC.montaLayout({ ativo: 'bionexo', titulo: 'Bionexo — respostas do robô', eyebrow: 'Dados' }); } catch (e) {}
+  ['f-de','f-ate','f-estado'].forEach(function (id) { $(id).addEventListener('change', desenha); });
+  $('f-busca').addEventListener('input', function () { aviso(''); desenha(); });
+  $('corpo').addEventListener('click', async function (ev) {
+    var lin = ev.target.closest && ev.target.closest('tr.cot');
+    if (lin && !LTCOMPRAS.ehBotao(ev)) {
+      var d = $('corpo').querySelector('tr.det[data-det="' + lin.getAttribute('data-abre') + '"]');
+      if (d) { d.hidden = !d.hidden; lin.querySelector('.seta').textContent = d.hidden ? '▸' : '▾'; }
+      return;
+    }
+    await LTCOMPRAS.clique(ev, { todas: todas, origem: 'BIONEXO', BXCOMPRAS: BXCOMPRAS, vigente: BX.vigente, aviso: aviso, confirma: confirm, fetch: window.fetch.bind(window), url: LIMEDTEC.urlBanco(), headers: LIMEDTEC.cabecalhosDados() });
+  });
+  $('b-atualiza').addEventListener('click', carrega);
+  // O crachá só vai junto depois que o gm-auth termina; antes disso a consulta sairia como anônima.
+  gmQuandoPronto(function () { carrega(); setInterval(carrega, 60000); });
+})();
+</script>
+</body>
+</html>

@@ -453,7 +453,7 @@
     }).join('');
   }
   function tokenSessao() {
-    try { var s = JSON.parse(window.localStorage.getItem('gm_session') || 'null'); return (s && s.access_token) || ''; } catch (e) { return ''; }
+    try { var s = JSON.parse(window.localStorage.getItem('gm_session_002') || 'null'); return (s && s.access_token) || ''; } catch (e) { return ''; }
   }
   function ligaRobos(conteudo) {
     var cfg = (window.LIMEDTEC && window.LIMEDTEC.cfg) ? window.LIMEDTEC.cfg() : null;

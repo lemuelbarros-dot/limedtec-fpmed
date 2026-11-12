@@ -48,7 +48,7 @@
   // Sem sessao, cai na anonima (o servidor responde o que a RLS permitir).
   function cabecalhosDados() {
     var tok = null;
-    try { var s = JSON.parse(raiz.localStorage.getItem('gm_session') || 'null'); tok = s && s.access_token; } catch (e) {}
+    try { var s = JSON.parse(raiz.localStorage.getItem('gm_session_002') || 'null'); tok = s && s.access_token; } catch (e) {}
     return { apikey: chaveBanco(), Authorization: 'Bearer ' + (tok || chaveBanco()) };
   }
   function edge(nome) { return banco().url + '/functions/v1/' + nome; }

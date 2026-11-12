@@ -15,7 +15,7 @@
   // O LIMEDTEC.banco() explode com o nome do arquivo que falta. Falhar alto e barato.
   var SB   = window.LIMEDTEC.urlBanco();
   var ANON = window.LIMEDTEC.chaveBanco();
-  var K = 'gm_session';
+  var K = 'gm_session_002'; // 002: gaveta propria (mesma origem github.io da GlobalMed)
 
   // ── Controle de acesso por sistema ───────────────────────────────────────────
   // role 'giovana_only' só entra na globalmed_giovana.html; nos outros sistemas é bloqueado.

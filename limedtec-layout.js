@@ -355,7 +355,10 @@
       alvos: '<span id="badge-acd" style="background:var(--lt-erro);color:var(--lt-txt-forte);border-radius:10px;font-size:var(--lt-txt-1);font-weight:700;padding:1px var(--lt-e-8);margin-left:auto;display:none" title="fabricantes no ranking sem contato cadastrado">0</span>'
     };
     h.push('<nav class="lt-nav">');
-    NAV.forEach(function (g) {
+    // 002: so os itens das paginas que existem neste site (pacote so-robos, decisao 207).
+    var PAG = (window.LIMEDTEC_CLIENTE && window.LIMEDTEC_CLIENTE.paginas) || null;
+    var NAVV = !PAG ? NAV : NAV.map(function (g) { return { label: g.label, items: g.items.filter(function (it) { return it.href && PAG.indexOf(String(it.href).split('#')[0]) >= 0; }) }; }).filter(function (g) { return g.items.length; });
+    NAVV.forEach(function (g) {
       h.push('<div class="lt-grupo"><div class="lt-grupo-tit">' + esc(g.label) + '</div>');
       g.items.forEach(function (it) {
         var on = (it.id === ativo) ? ' lt-ativo' : '';

@@ -449,7 +449,7 @@
       var L = leituraRobo(porNome[p[0]], agoraMs);
       var txt = L.estado === 'verde' ? L.texto : L.texto;
       return '<div class="lt-rb lt-rb-' + L.estado + '" title="' + esc(p[1] + ': ' + txt + (L.hora ? ' (dado das ' + L.hora + ')' : '')) + '">'
-        + svgRobo(L.estado) + '<div class="lt-rb-tx"><b>' + p[1] + '</b><span>' + esc(txt) + '</span>' + (L.hora ? '<i>' + L.hora + '</i>' : '') + '</div></div>';
+        + svgRobo(L.estado) + '<div class="lt-rb-tx"><b>' + p[1] + '</b><span>' + esc(txt) + '</span>' + (L.hora ? '<i>' + L.hora + '</i>' : '') + '<a href="limedtec-fpmed://login/' + p[0] + '" style="display:block;font-size:12px;color:#075985;text-decoration:underline;margin-top:4px" title="Abre o login na maquina onde o robo FPMED esta instalado">Entrar no robô</a></div></div>';
     }).join('');
   }
   function tokenSessao() {

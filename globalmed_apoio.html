@@ -92,6 +92,7 @@
     </tr></thead>
     <tbody id="corpo"></tbody>
   </table></div>
+  <div class="nota-conta" id="enviar-mao"></div>
   <div class="nota-conta" id="nao-cotados"></div>
 </div>
 
@@ -144,6 +145,37 @@ var BX = (function () {
     if (r.pedido_minimo != null) p.push('mín. ' + brl(r.pedido_minimo));
     if (r.validade) p.push('valida até ' + String(r.validade).split('-').reverse().join('/'));
     return p.length ? esc(p.join(' · ')) : '<span class="sub">não informadas</span>';
+  }
+  // A_570: lista "enviar na mão" = cotações de id ímpar (captcha) que o robô não envia. Só desenha o que a prévia gravou (preço vem dela, nada recalculado).
+  // Some: vencida, ou já respondida por gente/robô (existe em apoio_respostas), ou de prévia antiga (previa_em mais de 6h antes da mais nova).
+  function listaEnviarMao(rows, respostas, agora) {
+    var t = agora == null ? Date.now() : agora, feitas = {};
+    (respostas || []).forEach(function (r) { feitas[String(r.bionexo_id)] = 1; });
+    var nova = 0; (rows || []).forEach(function (r) { var p = new Date(r.previa_em).getTime(); if (p > nova) nova = p; });
+    return (rows || []).filter(function (r) {
+      if (!r.motivo && Number(String(r.bionexo_id).replace(/D/g, '')) % 2 !== 1) return false; // F_104: com motivo gravado (ex. validade ilegivel) entra mesmo sendo par
+      if (feitas[String(r.bionexo_id)]) return false;
+      if (r.vence_em && new Date(r.vence_em).getTime() < t) return false;
+      if (nova && new Date(r.previa_em).getTime() < nova - 6 * 3600e3) return false;
+      return Array.isArray(r.itens) && r.itens.length > 0;
+    }).sort(function (a, b) { return (num(b.total) || 0) - (num(a.total) || 0); });
+  }
+  // F_104 (dono 12/11: "mudar para cotado"): a que estava na lista e ja foi respondida no portal (existe em apoio_respostas) aparece como COTADO, sem ninguem marcar.
+  function listaCotadasMao(rows, respostas) {
+    var feitas = {}; (respostas || []).forEach(function (r) { feitas[String(r.bionexo_id)] = 1; });
+    return (rows || []).filter(function (r) { return feitas[String(r.bionexo_id)] && Array.isArray(r.itens) && r.itens.length > 0; });
+  }
+  function motivoMao(r) { return r.motivo === 'validade_minima_exigida_ilegivel' ? 'validade mínima ilegível no portal' : (r.motivo ? String(r.motivo) : 'captcha'); }
+  function htmlCotadasMao(l) { return (l && l.length) ? '<div class="sub" style="margin-top:8px"><b>COTADO (' + l.length + ')</b> — respondidas no portal: ' + l.map(function (r) { return esc(r.bionexo_id) + ' · ' + esc(r.comprador || 'não informado') + ' · <b>COTADO</b>'; }).join(' · ') + '</div>' : ''; }
+  function htmlEnviarMao(lista, cotadas) {
+    if (!lista.length) return '<b>Enviar na mão (captcha):</b> nenhuma cotação ímpar com item nosso agora.' + htmlCotadasMao(cotadas);
+    var tot = lista.reduce(function (s, r) { return s + (num(r.total) || 0); }, 0);
+    return '<b>Enviar na mão (captcha): ' + lista.length + ' cotações · ' + brl(tot) + '</b> — o robô não resolve captcha; abra, resolva a imagem e envie. Preço da prévia do robô (' + esc(dataHora(lista[0].previa_em)) + ').'
+      + lista.map(function (r) {
+        return '<details style="margin-top:6px"><summary><b>' + esc(r.bionexo_id) + '</b> · ' + esc(r.comprador || 'não informado') + ' (' + esc([r.cidade, r.uf].filter(Boolean).join('/')) + ') · ' + brl(r.total)
+          + ' · <i>motivo: ' + esc(motivoMao(r)) + '</i> · vence ' + esc(dataHora(r.vence_em)) + ' · <a href="' + esc(r.url) + '" target="_blank" rel="noopener">abrir cotação</a></summary><div class="sub">'
+          + r.itens.map(function (i) { return esc(i.pedido) + ' → ' + esc(i.nosso_produto) + ' · ' + (num(i.quantidade) != null ? num(i.quantidade) : '—') + ' × ' + brl(i.preco_unit, 4) + ' = ' + brl(i.total); }).join('<br>') + '</div></details>';
+      }).join('') + htmlCotadasMao(cotadas);
   }
   function rotulo(est) { return BXCOMPRAS.rotuloEstado(est); } // uma regra, um lugar: bionexo-compras.js
   // Estado 'resgatada' = ganhamos E o robô viu o pedido em Compras > Fornecimento > Pedidos (coluna aditiva resgatado_em).
@@ -280,7 +312,7 @@ var BX = (function () {
     });
     return { grupos: Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return b.n - a.n; }), total: (rows || []).length, visto_em: ult };
   }
-  return { motivoGente: motivoGente, agrupaNaoCotados: agrupaNaoCotados, limpaComprador: limpaComprador, cotacoes: cotacoes, esc: esc, brl: brl, dataHora: dataHora, linha: linha, filtra: filtra, resumo: resumo, classifica: classifica, diaBR: diaBR, agrupa: agrupa, vigente: vigente, rotulo: rotulo, normaliza: normaliza };
+  return { motivoGente: motivoGente, agrupaNaoCotados: agrupaNaoCotados, limpaComprador: limpaComprador, cotacoes: cotacoes, esc: esc, brl: brl, dataHora: dataHora, linha: linha, filtra: filtra, resumo: resumo, classifica: classifica, diaBR: diaBR, agrupa: agrupa, vigente: vigente, rotulo: rotulo, normaliza: normaliza, listaEnviarMao: listaEnviarMao, listaCotadasMao: listaCotadasMao, htmlEnviarMao: htmlEnviarMao };
 })();
 if (typeof module !== 'undefined') module.exports = BX;
 </script>
@@ -359,6 +391,15 @@ if (typeof module !== 'undefined') module.exports = BX;
           + (g.n > 40 ? '<br>… e mais ' + (g.n - 40) : '') + '</div></details>';
       }).join('');
   }
+  async function carregaEnviarMao() {
+    var el = $('enviar-mao'); if (!el) return;
+    try {
+      var r = await fetch(LIMEDTEC.urlBanco() + '/rest/v1/apoio_enviar_mao?select=*&order=total.desc&limit=2000', { headers: LIMEDTEC.cabecalhosDados(), cache: 'no-store' });
+      var c = null; try { c = await r.json(); } catch (e) {}
+      if (r.status === 200 && Array.isArray(c)) el.innerHTML = BX.htmlEnviarMao(BX.listaEnviarMao(c, todas), BX.listaCotadasMao(c, todas));
+      else el.innerHTML = '<b>Enviar na mão (captcha):</b> não deu para ler (HTTP ' + r.status + '). Isto não quer dizer que não haja.';
+    } catch (e) { el.innerHTML = '<b>Enviar na mão (captcha):</b> sem conexão. Isto não quer dizer que não haja.'; }
+  }
   async function carregaNaoCotados() {
     try {
       var r = await fetch(LIMEDTEC.urlBanco() + '/rest/v1/apoio_nao_cotados?select=*&order=visto_em.desc&limit=5000', { headers: LIMEDTEC.cabecalhosDados(), cache: 'no-store' });
@@ -383,7 +424,7 @@ if (typeof module !== 'undefined') module.exports = BX;
       estadoLeitura = 'erro'; aviso('Sem conexão com o banco. O que aparece abaixo pode estar velho — não é "zero".', true);
     }
     ultimaLeitura = new Date().toISOString();
-    desenha();
+    desenha(); carregaEnviarMao();
   }
 
   try { LIMEDTEC.montaLayout({ ativo: 'apoio', titulo: 'Apoio — respostas do robô', eyebrow: 'Dados' }); } catch (e) {}

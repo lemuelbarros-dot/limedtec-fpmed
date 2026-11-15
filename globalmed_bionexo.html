@@ -188,6 +188,27 @@ var BX = (function () {
     return { respostas: rows.length, cotacoes: Object.keys(cot).length, total: tot, ganho: ganho, nGanhas: nGanhas };
   }
   // Decide o que a tela diz depois do fetch. Erro NUNCA vira "nenhuma resposta" (lição 30).
+  // F_115: o que a tela diz quando NAO leu os itens barrados. 404 = tabela ainda nao criada no banco (o robo guarda no computador ate criar).
+  // F_123: le o alarme do 404 do detalhe da linha bionexo de robo_batimento (mesma rota do robozinho).
+  function alarmeDoBatimento(linhas) {
+    if (!Array.isArray(linhas)) return null;
+    for (var i = 0; i < linhas.length; i++) {
+      var l = linhas[i]; if (!l || (l.robo !== 'bionexo' && l.robo !== 'bionexo_alarme')) continue;
+      var m = /ALARME404 desde=(\S+) n=(\d+)/.exec(String(l.detalhe || ''));
+      if (m) return { desde: m[1], tentativas: parseInt(m[2], 10) };
+    }
+    return null;
+  }
+  // F_122: com o alarme da F_121 (hora + tentativas) a tela diz desde quando a lista NAO e gravada.
+  function msgNaoCotadosSemLeitura(status, alarme) {
+    if (status === 404 && alarme && alarme.desde && alarme.tentativas) {
+      var h = new Date(alarme.desde); var hh = isNaN(h) ? '?' : ('0' + h.getHours()).slice(-2) + ':' + ('0' + h.getMinutes()).slice(-2);
+      return '<b>Itens NÃO cotados — ALARME:</b> a lista não está sendo gravada desde ' + hh + ' (' + alarme.tentativas + ' tentativas): falta liberar a tabela <i>bionexo_nao_cotados</i> no banco. O robô guarda os itens no computador; isto NÃO quer dizer que ele não olhou nada.';
+    }
+    if (status === 404) return '<b>Itens NÃO cotados:</b> o robô JÁ está barrando itens e guardando o motivo no computador, mas a tabela <i>bionexo_nao_cotados</i> ainda não foi criada no banco, por isso não aparece aqui. Falta só o dono liberar a criação. Isto NÃO quer dizer que o robô não olhou nada.';
+    if (status === 401 || status === 403) return '<b>Itens NÃO cotados:</b> sem permissão para ler (HTTP ' + status + '). Entre de novo.';
+    return '<b>Itens NÃO cotados:</b> não consegui ler agora (' + (status ? 'HTTP ' + status : 'sem conexão') + '). Isto não quer dizer que não haja.';
+  }
   function classifica(status, corpo) {
     if (status === 200 && Array.isArray(corpo)) return { tipo: corpo.length ? 'ok' : 'vazio' };
     var txt = corpo && (corpo.code || corpo.message) ? String(corpo.code || '') + ' ' + String(corpo.message || '') : '';
@@ -280,7 +301,7 @@ var BX = (function () {
     });
     return { grupos: Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return b.n - a.n; }), total: (rows || []).length, visto_em: ult };
   }
-  return { motivoGente: motivoGente, agrupaNaoCotados: agrupaNaoCotados, limpaComprador: limpaComprador, cotacoes: cotacoes, esc: esc, brl: brl, dataHora: dataHora, linha: linha, filtra: filtra, resumo: resumo, classifica: classifica, diaBR: diaBR, agrupa: agrupa, vigente: vigente, rotulo: rotulo, normaliza: normaliza };
+  return { alarmeDoBatimento: alarmeDoBatimento, motivoGente: motivoGente, agrupaNaoCotados: agrupaNaoCotados, limpaComprador: limpaComprador, cotacoes: cotacoes, esc: esc, brl: brl, dataHora: dataHora, linha: linha, filtra: filtra, resumo: resumo, classifica: classifica, msgNaoCotadosSemLeitura: msgNaoCotadosSemLeitura, diaBR: diaBR, agrupa: agrupa, vigente: vigente, rotulo: rotulo, normaliza: normaliza };
 })();
 if (typeof module !== 'undefined') module.exports = BX;
 </script>
@@ -294,7 +315,7 @@ if (typeof module !== 'undefined') module.exports = BX;
 <script>
 (function () {
   if (typeof document === 'undefined' || !document.getElementById('corpo')) return;
-  var todas = [], ultimaLeitura = null, estadoLeitura = null, naoCotados = null;
+  var todas = [], ultimaLeitura = null, estadoLeitura = null, naoCotados = null, naoCotadosStatus = 0, alarmeNaoCot = null;
   function $(id) { return document.getElementById(id); }
   function aviso(msg, erro) { var a = $('aviso'); a.className = erro ? 'erro' : ''; a.textContent = msg || ''; a.style.display = msg ? 'block' : 'none'; }
 
@@ -349,7 +370,7 @@ if (typeof module !== 'undefined') module.exports = BX;
 
   function desenhaNaoCotados() {
     var el = $('nao-cotados'); if (!el) return;
-    if (naoCotados === null) { el.innerHTML = '<b>Itens NÃO cotados:</b> ainda não deu para ler (a tabela pode não existir ainda). Isto não quer dizer que não haja.'; return; }
+    if (naoCotados === null) { el.innerHTML = BX.msgNaoCotadosSemLeitura(naoCotadosStatus, alarmeNaoCot); return; }
     var a = BX.agrupaNaoCotados(naoCotados);
     if (!a.total) { el.innerHTML = '<b>Itens NÃO cotados:</b> nenhum gravado ainda.'; return; }
     el.innerHTML = '<b>Itens NÃO cotados pelo robô: ' + a.total + '</b> · último visto em ' + BX.esc(BX.dataHora(a.visto_em)) + '. Cada item aparece uma vez (a última rodada vale).'
@@ -363,8 +384,10 @@ if (typeof module !== 'undefined') module.exports = BX;
     try {
       var r = await fetch(LIMEDTEC.urlBanco() + '/rest/v1/bionexo_nao_cotados?select=*&order=visto_em.desc&limit=5000', { headers: LIMEDTEC.cabecalhosDados(), cache: 'no-store' });
       var c = null; try { c = await r.json(); } catch (e) {}
-      naoCotados = (r.status === 200 && Array.isArray(c)) ? c : null;
-    } catch (e) { naoCotados = null; }
+      naoCotadosStatus = r.status; naoCotados = (r.status === 200 && Array.isArray(c)) ? c : null;
+    } catch (e) { naoCotadosStatus = 0; naoCotados = null; }
+    alarmeNaoCot = null;
+    if (naoCotadosStatus === 404) { try { var ra = await fetch(LIMEDTEC.urlBanco() + '/rest/v1/robo_batimento?robo=in.(bionexo,bionexo_alarme)&select=robo,detalhe,lido_em', { headers: LIMEDTEC.cabecalhosDados(), cache: 'no-store' }); if (ra.status === 200) alarmeNaoCot = BX.alarmeDoBatimento(await ra.json()); } catch (e) {} }
     desenhaNaoCotados();
   }
 
